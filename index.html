@@ -2094,26 +2094,34 @@
         function checkCollisions() {
             if (gameState !== 'playing') return;
 
-            // Player 1 ataque melee vs Player 2 cabeça (só se estiver atacando)
+            // Player 1 ataque melee vs Player 2 (só se estiver atacando)
             if (player2.alive && player1.alive && player2.invincible === 0 && player1.isAttacking) {
-                const sword1 = player1.getSwordHitbox();
-                if (lineCircleCollision(
-                    sword1.x1, sword1.y1, sword1.x2, sword1.y2,
-                    player2.headX, player2.headY, player2.headRadius
-                )) {
+                // Hitbox maior baseada em distância e direção
+                const dx = player2.x - player1.x;
+                const dist = Math.abs(dx);
+                const facingRight = player1.facing === 1;
+                const targetOnCorrectSide = (facingRight && dx > 0) || (!facingRight && dx < 0);
+                const verticalDist = Math.abs(player1.y - player2.y);
+
+                // Alcance de 120px na horizontal, 80px na vertical
+                if (dist < 120 && verticalDist < 80 && targetOnCorrectSide) {
                     player2.hit(player1.x, SWORD_DAMAGE);
                     player1.isAttacking = false; // Só acerta uma vez por ataque
                     if (!player2.alive) endRound(1);
                 }
             }
 
-            // Player 2 ataque melee vs Player 1 cabeça (só se estiver atacando)
+            // Player 2 ataque melee vs Player 1 (só se estiver atacando)
             if (player1.alive && player2.alive && player1.invincible === 0 && player2.isAttacking) {
-                const sword2 = player2.getSwordHitbox();
-                if (lineCircleCollision(
-                    sword2.x1, sword2.y1, sword2.x2, sword2.y2,
-                    player1.headX, player1.headY, player1.headRadius
-                )) {
+                // Hitbox maior baseada em distância e direção
+                const dx = player1.x - player2.x;
+                const dist = Math.abs(dx);
+                const facingRight = player2.facing === 1;
+                const targetOnCorrectSide = (facingRight && dx > 0) || (!facingRight && dx < 0);
+                const verticalDist = Math.abs(player2.y - player1.y);
+
+                // Alcance de 120px na horizontal, 80px na vertical
+                if (dist < 120 && verticalDist < 80 && targetOnCorrectSide) {
                     player1.hit(player2.x, SWORD_DAMAGE);
                     player2.isAttacking = false; // Só acerta uma vez por ataque
                     if (!player1.alive) endRound(2);
