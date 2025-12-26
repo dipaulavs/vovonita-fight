@@ -287,7 +287,7 @@
                         <div class="preview-weapon" id="p1PreviewWeapon">-</div>
                     </div>
                     <div class="character-grid" id="p1Grid"></div>
-                    <p class="controls-hint">WASD + Q</p>
+                    <p class="controls-hint">WASD + E (ataque) + Q (hab)</p>
                 </div>
 
                 <!-- VS -->
@@ -304,7 +304,7 @@
                         <div class="preview-weapon" id="p2PreviewWeapon">-</div>
                     </div>
                     <div class="character-grid" id="p2Grid"></div>
-                    <p class="controls-hint">SETAS + L</p>
+                    <p class="controls-hint">SETAS + K (ataque) + L (hab)</p>
                 </div>
             </div>
 
@@ -327,8 +327,8 @@
             <canvas id="gameCanvas" width="1000" height="600"></canvas>
 
             <div class="controls-info">
-                <span><span class="key">P1:</span> WASD mover | Q habilidade</span>
-                <span><span class="key">P2:</span> Setas mover | L habilidade</span>
+                <span><span class="key">P1:</span> WASD mover | E ataque | Q habilidade</span>
+                <span><span class="key">P2:</span> Setas mover | K ataque | L habilidade</span>
                 <span><span class="key">R</span> Reiniciar | <span class="key">ESC</span> Menu</span>
             </div>
         </div>
@@ -1369,6 +1369,11 @@
                 // Debounce para tecla de habilidade
                 this.lastDashKey = false;
 
+                // Ataque melee
+                this.isAttacking = false;
+                this.attackCooldown = 0;
+                this.attackTimer = 0;
+
                 // Dimensões
                 this.headRadius = 35;
                 this.bodyLength = 50;
@@ -1396,12 +1401,14 @@
                 if (this.dashCooldown > 0) this.dashCooldown--;
                 if (this.invincible > 0) this.invincible--;
                 if (this.hitFlash > 0) this.hitFlash--;
+                if (this.attackCooldown > 0) this.attackCooldown--;
+                if (this.attackTimer > 0) this.attackTimer--;
 
                 // Movimento
                 const speed = 5;
                 const moveKeys = this.playerNum === 1
-                    ? { left: 'KeyA', right: 'KeyD', up: 'KeyW', down: 'KeyS', dash: 'KeyQ' }
-                    : { left: 'ArrowLeft', right: 'ArrowRight', up: 'ArrowUp', down: 'ArrowDown', dash: 'KeyL' };
+                    ? { left: 'KeyA', right: 'KeyD', up: 'KeyW', down: 'KeyS', dash: 'KeyQ', attack: 'KeyE' }
+                    : { left: 'ArrowLeft', right: 'ArrowRight', up: 'ArrowUp', down: 'ArrowDown', dash: 'KeyL', attack: 'KeyK' };
 
                 // Movimento (só se não estiver dando dash)
                 if (!this.isDashing) {
@@ -1461,6 +1468,19 @@
                     }
                 }
 
+                // Ataque melee (E para P1, K para P2)
+                if (keys[moveKeys.attack] && this.attackCooldown === 0 && !this.isAttacking) {
+                    this.isAttacking = true;
+                    this.attackTimer = 15; // Duração do ataque (15 frames)
+                    this.attackCooldown = 30; // Cooldown entre ataques (0.5s)
+                    playSound('sword');
+                }
+
+                // Fim do ataque
+                if (this.attackTimer === 0 && this.isAttacking) {
+                    this.isAttacking = false;
+                }
+
                 // Gravidade
                 this.vy += 0.6;
 
@@ -1496,7 +1516,10 @@
                 }
 
                 // Animação do braço/espada
-                if (this.isDashing) {
+                if (this.isAttacking) {
+                    // Animação de ataque - braço esticado para frente
+                    this.armAngle = this.facing * -1.5;
+                } else if (this.isDashing) {
                     this.armAngle = this.facing * -1.2;
                 } else {
                     const targetAngle = this.facing * -0.3;
@@ -2071,33 +2094,28 @@
         function checkCollisions() {
             if (gameState !== 'playing') return;
 
-            // Só personagens melee (espada) podem atacar de perto
-            const isMeleeWeapon = (weapon) => weapon === 'sword';
-
-            // Player 1 arma vs Player 2 cabeça (só se for melee)
-            if (player2.alive && player1.alive && player2.invincible === 0 && isMeleeWeapon(player1.character.weapon)) {
+            // Player 1 ataque melee vs Player 2 cabeça (só se estiver atacando)
+            if (player2.alive && player1.alive && player2.invincible === 0 && player1.isAttacking) {
                 const sword1 = player1.getSwordHitbox();
                 if (lineCircleCollision(
                     sword1.x1, sword1.y1, sword1.x2, sword1.y2,
                     player2.headX, player2.headY, player2.headRadius
                 )) {
-                    // Som de espada
-                    playSound('sword');
                     player2.hit(player1.x, SWORD_DAMAGE);
+                    player1.isAttacking = false; // Só acerta uma vez por ataque
                     if (!player2.alive) endRound(1);
                 }
             }
 
-            // Player 2 arma vs Player 1 cabeça (só se for melee)
-            if (player1.alive && player2.alive && player1.invincible === 0 && isMeleeWeapon(player2.character.weapon)) {
+            // Player 2 ataque melee vs Player 1 cabeça (só se estiver atacando)
+            if (player1.alive && player2.alive && player1.invincible === 0 && player2.isAttacking) {
                 const sword2 = player2.getSwordHitbox();
                 if (lineCircleCollision(
                     sword2.x1, sword2.y1, sword2.x2, sword2.y2,
                     player1.headX, player1.headY, player1.headRadius
                 )) {
-                    // Som de espada
-                    playSound('sword');
                     player1.hit(player2.x, SWORD_DAMAGE);
+                    player2.isAttacking = false; // Só acerta uma vez por ataque
                     if (!player1.alive) endRound(2);
                 }
             }
