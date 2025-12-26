@@ -338,6 +338,276 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
+        // ===========================================
+        // SISTEMA DE ÁUDIO - Web Audio API
+        // ===========================================
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Função para criar som sintético
+        function playSound(type, volume = 0.3) {
+            // Desbloquear AudioContext se necessário
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const now = audioCtx.currentTime;
+            const gainNode = audioCtx.createGain();
+            gainNode.connect(audioCtx.destination);
+            gainNode.gain.value = volume;
+
+            switch(type) {
+                case 'sword': {
+                    // Som metálico de espada (sweep agudo)
+                    const osc = audioCtx.createOscillator();
+                    const filter = audioCtx.createBiquadFilter();
+                    filter.type = 'highpass';
+                    filter.frequency.value = 2000;
+                    osc.connect(filter);
+                    filter.connect(gainNode);
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(800, now);
+                    osc.frequency.exponentialRampToValueAtTime(200, now + 0.15);
+                    gainNode.gain.setValueAtTime(volume, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                    break;
+                }
+
+                case 'dash': {
+                    // Som de velocidade/whoosh
+                    const noise = audioCtx.createBufferSource();
+                    const bufferSize = audioCtx.sampleRate * 0.2;
+                    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        data[i] = (Math.random() * 2 - 1) * (1 - i/bufferSize);
+                    }
+                    noise.buffer = buffer;
+                    const filter = audioCtx.createBiquadFilter();
+                    filter.type = 'bandpass';
+                    filter.frequency.setValueAtTime(800, now);
+                    filter.frequency.exponentialRampToValueAtTime(200, now + 0.2);
+                    filter.Q.value = 2;
+                    noise.connect(filter);
+                    filter.connect(gainNode);
+                    gainNode.gain.setValueAtTime(volume * 0.5, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                    noise.start(now);
+                    break;
+                }
+
+                case 'music': {
+                    // Som de nota musical (corneta)
+                    const osc1 = audioCtx.createOscillator();
+                    const osc2 = audioCtx.createOscillator();
+                    osc1.type = 'triangle';
+                    osc2.type = 'sine';
+                    const freq = 400 + Math.random() * 300;
+                    osc1.frequency.value = freq;
+                    osc2.frequency.value = freq * 1.5;
+                    osc1.connect(gainNode);
+                    osc2.connect(gainNode);
+                    gainNode.gain.setValueAtTime(volume * 0.4, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc1.start(now);
+                    osc2.start(now);
+                    osc1.stop(now + 0.3);
+                    osc2.stop(now + 0.3);
+                    break;
+                }
+
+                case 'axe': {
+                    // Som de machado girando
+                    const osc = audioCtx.createOscillator();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.setValueAtTime(200, now + 0.05);
+                    osc.frequency.setValueAtTime(150, now + 0.1);
+                    osc.connect(gainNode);
+                    gainNode.gain.setValueAtTime(volume * 0.3, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                    break;
+                }
+
+                case 'grass': {
+                    // Som de capim/folhas
+                    const noise = audioCtx.createBufferSource();
+                    const bufferSize = audioCtx.sampleRate * 0.15;
+                    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        data[i] = (Math.random() * 2 - 1) * 0.3;
+                    }
+                    noise.buffer = buffer;
+                    const filter = audioCtx.createBiquadFilter();
+                    filter.type = 'highpass';
+                    filter.frequency.value = 3000;
+                    noise.connect(filter);
+                    filter.connect(gainNode);
+                    gainNode.gain.setValueAtTime(volume * 0.3, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    noise.start(now);
+                    break;
+                }
+
+                case 'bowling': {
+                    // Som de pino de boliche
+                    const osc = audioCtx.createOscillator();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, now);
+                    osc.frequency.exponentialRampToValueAtTime(100, now + 0.2);
+                    osc.connect(gainNode);
+                    gainNode.gain.setValueAtTime(volume * 0.5, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                    osc.start(now);
+                    osc.stop(now + 0.2);
+                    break;
+                }
+
+                case 'hit': {
+                    // Som de impacto/dano
+                    const osc = audioCtx.createOscillator();
+                    const noise = audioCtx.createBufferSource();
+                    const bufferSize = audioCtx.sampleRate * 0.1;
+                    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        data[i] = (Math.random() * 2 - 1);
+                    }
+                    noise.buffer = buffer;
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.exponentialRampToValueAtTime(50, now + 0.1);
+                    const filter = audioCtx.createBiquadFilter();
+                    filter.type = 'lowpass';
+                    filter.frequency.value = 500;
+                    osc.connect(gainNode);
+                    noise.connect(filter);
+                    filter.connect(gainNode);
+                    gainNode.gain.setValueAtTime(volume * 0.8, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    noise.start(now);
+                    osc.stop(now + 0.15);
+                    break;
+                }
+
+                case 'death': {
+                    // Som de morte/KO
+                    const osc = audioCtx.createOscillator();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(50, now + 0.5);
+                    osc.connect(gainNode);
+                    gainNode.gain.setValueAtTime(volume * 0.6, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                    // Segundo tom para efeito dramático
+                    setTimeout(() => {
+                        const osc2 = audioCtx.createOscillator();
+                        const gain2 = audioCtx.createGain();
+                        gain2.connect(audioCtx.destination);
+                        osc2.connect(gain2);
+                        osc2.type = 'sine';
+                        osc2.frequency.value = 80;
+                        gain2.gain.setValueAtTime(volume * 0.4, audioCtx.currentTime);
+                        gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                        osc2.start();
+                        osc2.stop(audioCtx.currentTime + 0.3);
+                    }, 200);
+                    break;
+                }
+
+                case 'jump': {
+                    // Som de pulo
+                    const osc = audioCtx.createOscillator();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(200, now);
+                    osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+                    osc.connect(gainNode);
+                    gainNode.gain.setValueAtTime(volume * 0.2, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                    break;
+                }
+
+                case 'select': {
+                    // Som de seleção no menu
+                    const osc = audioCtx.createOscillator();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.setValueAtTime(550, now + 0.05);
+                    osc.connect(gainNode);
+                    gainNode.gain.setValueAtTime(volume * 0.3, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                    break;
+                }
+
+                case 'start': {
+                    // Som de início de batalha
+                    [0, 0.1, 0.2].forEach((delay, i) => {
+                        setTimeout(() => {
+                            const osc = audioCtx.createOscillator();
+                            const gain = audioCtx.createGain();
+                            gain.connect(audioCtx.destination);
+                            osc.connect(gain);
+                            osc.type = 'triangle';
+                            osc.frequency.value = 300 + i * 200;
+                            gain.gain.setValueAtTime(volume * 0.4, audioCtx.currentTime);
+                            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                            osc.start();
+                            osc.stop(audioCtx.currentTime + 0.15);
+                        }, delay * 1000);
+                    });
+                    break;
+                }
+
+                case 'win': {
+                    // Som de vitória do round
+                    [0, 0.15, 0.3].forEach((delay, i) => {
+                        setTimeout(() => {
+                            const osc = audioCtx.createOscillator();
+                            const gain = audioCtx.createGain();
+                            gain.connect(audioCtx.destination);
+                            osc.connect(gain);
+                            osc.type = 'triangle';
+                            osc.frequency.value = [523.25, 659.25, 783.99][i]; // C5, E5, G5 (acorde maior)
+                            gain.gain.setValueAtTime(volume * 0.4, audioCtx.currentTime);
+                            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                            osc.start();
+                            osc.stop(audioCtx.currentTime + 0.3);
+                        }, delay * 1000);
+                    });
+                    break;
+                }
+
+                case 'bounce': {
+                    // Som de quique (pino de boliche)
+                    const osc = audioCtx.createOscillator();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(150, now + 0.08);
+                    osc.connect(gainNode);
+                    gainNode.gain.setValueAtTime(volume * 0.3, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                    break;
+                }
+            }
+        }
+
+        // Desbloquear áudio no primeiro clique/tecla
+        document.addEventListener('click', () => audioCtx.resume(), { once: true });
+        document.addEventListener('keydown', () => audioCtx.resume(), { once: true });
+
         // Carregar imagens dos personagens
         const visaoImg = new Image();
         visaoImg.src = 'visao.png';
@@ -512,6 +782,8 @@
             projectiles.push(new MusicProjectile(startX, startY, player.facing, player.playerNum));
             // Efeito visual de disparo
             spawnMusicNotes(startX, startY, player.facing);
+            // Som de nota musical
+            playSound('music');
         }
 
         // Machado Boomerang
@@ -680,6 +952,8 @@
             const startY = player.y - 30;
             projectiles.push(new AxeBoomerang(startX, startY, player.facing, player.playerNum, player));
             player.axeOut = true;
+            // Som de machado
+            playSound('axe');
         }
 
         // Projétil de Capim
@@ -758,6 +1032,8 @@
                 proj.vy += i * 1.5;
                 projectiles.push(proj);
             }
+            // Som de capim
+            playSound('grass');
         }
 
         // Projétil de Pino de Boliche
@@ -790,6 +1066,8 @@
                     this.vx *= 0.7;
                     this.rotationSpeed *= 1.5;
                     this.bounced = true;
+                    // Som de quique
+                    playSound('bounce');
                 }
             }
 
@@ -856,6 +1134,8 @@
             const startX = player.x + player.facing * 50;
             const startY = player.y - 30;
             projectiles.push(new BowlingPinProjectile(startX, startY, player.facing, player.playerNum));
+            // Som de pino de boliche
+            playSound('bowling');
         }
 
         // Configuração dos personagens
@@ -978,6 +1258,9 @@
             const previewName = document.getElementById(`p${player}PreviewName`);
             const previewWeapon = document.getElementById(`p${player}PreviewWeapon`);
 
+            // Som de seleção
+            playSound('select');
+
             // Remover seleção anterior
             grid.querySelectorAll('.char-option').forEach(c => c.classList.remove('selected'));
 
@@ -1014,6 +1297,9 @@
         // Iniciar batalha
         function startBattle() {
             if (!selectedP1 || !selectedP2) return;
+
+            // Som de início de batalha
+            playSound('start');
 
             characterSelect.style.display = 'none';
             gameScreen.style.display = 'block';
@@ -1133,6 +1419,8 @@
                     if (keys[moveKeys.up] && this.grounded) {
                         this.vy = -15;
                         this.grounded = false;
+                        // Som de pulo
+                        playSound('jump');
                     }
                 }
 
@@ -1164,6 +1452,8 @@
                         this.dashDirection = this.facing;
                         this.vx = this.facing * 25;
                         this.dashCooldown = 40;
+                        // Som de dash
+                        playSound('dash');
 
                         setTimeout(() => {
                             this.isDashing = false;
@@ -1677,6 +1967,9 @@
                 this.hitFlash = 20;
                 this.invincible = 45; // Invencibilidade temporária mais longa
 
+                // Som de dano
+                playSound('hit');
+
                 // Knockback forte
                 const knockbackDir = this.x > fromX ? 1 : -1;
                 this.vx = knockbackDir * 12;
@@ -1697,6 +1990,8 @@
                     this.vy = -15;
                     // Mais partículas na morte
                     spawnDamageParticles(this.x, this.y - 50, 100);
+                    // Som de morte
+                    playSound('death');
                 }
             }
         }
@@ -1778,6 +2073,8 @@
                     sword1.x1, sword1.y1, sword1.x2, sword1.y2,
                     player2.headX, player2.headY, player2.headRadius
                 )) {
+                    // Som de espada
+                    playSound('sword');
                     player2.hit(player1.x, SWORD_DAMAGE);
                     // Efeito de notas musicais se for corneta
                     if (player1.character.weapon === 'corneta') {
@@ -1794,6 +2091,8 @@
                     sword2.x1, sword2.y1, sword2.x2, sword2.y2,
                     player1.headX, player1.headY, player1.headRadius
                 )) {
+                    // Som de espada
+                    playSound('sword');
                     player1.hit(player2.x, SWORD_DAMAGE);
                     // Efeito de notas musicais se for corneta
                     if (player2.character.weapon === 'corneta') {
@@ -1831,6 +2130,9 @@
         function endRound(winner) {
             gameState = 'roundEnd';
             roundWinner = winner;
+
+            // Som de vitória (com delay para não sobrepor som de morte)
+            setTimeout(() => playSound('win'), 400);
 
             if (winner === 1) {
                 p1Wins++;
