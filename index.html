@@ -1429,29 +1429,29 @@
 
                 if (dashKeyPressed && this.dashCooldown === 0) {
                     if (this.character.ability === 'shoot') {
-                        // TIRO DE NOTAS MUSICAIS
+                        // TIRO DE NOTAS MUSICAIS - 2 segundos
                         shootMusicNote(this);
-                        this.dashCooldown = 25;
+                        this.dashCooldown = 120; // 2s
                     } else if (this.character.ability === 'boomerang') {
-                        // MACHADO BOOMERANG
+                        // MACHADO BOOMERANG - 4 segundos (vai e volta)
                         if (!this.axeOut) {
                             throwAxe(this);
-                            this.dashCooldown = 15;
+                            this.dashCooldown = 240; // 4s
                         }
                     } else if (this.character.ability === 'grass') {
-                        // TIRO DE CAPIM
+                        // TIRO DE CAPIM - 3 segundos
                         shootGrass(this);
-                        this.dashCooldown = 30;
+                        this.dashCooldown = 180; // 3s
                     } else if (this.character.ability === 'throwpin') {
-                        // PINO DE BOLICHE
+                        // PINO DE BOLICHE - 3 segundos
                         throwBowlingPin(this);
-                        this.dashCooldown = 30;
+                        this.dashCooldown = 180; // 3s
                     } else {
-                        // DASH
+                        // DASH (VISÃO) - 3 segundos
                         this.isDashing = true;
                         this.dashDirection = this.facing;
                         this.vx = this.facing * 25;
-                        this.dashCooldown = 40;
+                        this.dashCooldown = 180; // 3s
                         // Som de dash
                         playSound('dash');
 
@@ -1931,7 +1931,12 @@
 
                 // Indicador de dash cooldown
                 if (this.dashCooldown > 0 && this.alive) {
-                    const cooldownPercent = this.dashCooldown / 60;
+                    // Cooldown máximo baseado na habilidade
+                    let maxCooldown = 180; // padrão 3s
+                    if (this.character.ability === 'shoot') maxCooldown = 120; // 2s
+                    else if (this.character.ability === 'boomerang') maxCooldown = 240; // 4s
+
+                    const cooldownPercent = this.dashCooldown / maxCooldown;
                     ctx.fillStyle = 'rgba(0,0,0,0.5)';
                     ctx.fillRect(x - 25, y + 60, 50, 8);
                     ctx.fillStyle = '#00ffff';
