@@ -11,50 +11,63 @@
             box-sizing: border-box;
         }
 
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
         body {
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
             background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            overflow: hidden;
         }
 
         .game-wrapper {
             text-align: center;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
         }
 
         h1 {
             color: #fff;
-            font-size: 36px;
-            margin-bottom: 10px;
+            font-size: 28px;
+            margin: 5px 0;
             text-shadow: 0 0 20px rgba(255,100,100,0.5);
         }
 
         .subtitle {
             color: #888;
-            margin-bottom: 20px;
-            font-size: 14px;
+            margin-bottom: 5px;
+            font-size: 12px;
         }
 
         #gameCanvas {
-            border-radius: 15px;
-            box-shadow: 0 0 50px rgba(255,50,50,0.3);
+            border-radius: 0;
+            box-shadow: none;
+            display: block;
         }
 
         .controls-info {
-            margin-top: 20px;
+            position: fixed;
+            bottom: 10px;
+            left: 0;
+            right: 0;
             color: #666;
-            font-size: 14px;
+            font-size: 12px;
+            z-index: 100;
         }
 
         .controls-info span {
             display: inline-block;
-            margin: 0 15px;
-            padding: 8px 15px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 8px;
+            margin: 0 10px;
+            padding: 5px 10px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 5px;
         }
 
         .controls-info .key {
@@ -63,17 +76,27 @@
         }
 
         .score-display {
+            position: fixed;
+            top: 10px;
+            left: 0;
+            right: 0;
             display: flex;
             justify-content: center;
-            gap: 100px;
-            margin-bottom: 15px;
+            gap: 50px;
+            z-index: 100;
         }
 
         .player-score {
             color: #fff;
-            font-size: 24px;
-            padding: 10px 30px;
+            font-size: 18px;
+            padding: 8px 20px;
             border-radius: 10px;
+        }
+
+        #gameScreen {
+            width: 100%;
+            height: 100%;
+            position: relative;
         }
 
         .p1-score {
@@ -337,6 +360,31 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+
+        // ===========================================
+        // TELA CHEIA - Redimensionar canvas
+        // ===========================================
+        let GAME_WIDTH = 1920;
+        let GAME_HEIGHT = 1080;
+        let SCALE = 1;
+
+        function resizeCanvas() {
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+
+            // Usar toda a tela
+            canvas.width = windowWidth;
+            canvas.height = windowHeight;
+
+            // Calcular escala baseada no tamanho original
+            GAME_WIDTH = windowWidth;
+            GAME_HEIGHT = windowHeight;
+            SCALE = Math.min(windowWidth / 1920, windowHeight / 1080);
+        }
+
+        // Redimensionar no início e quando a janela mudar
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
 
         // ===========================================
         // SISTEMA DE ÁUDIO - Web Audio API
@@ -1060,8 +1108,9 @@
                 this.life--;
 
                 // Quicar no chão
-                if (this.y > 480 && !this.bounced) {
-                    this.y = 480;
+                const chaoY = canvas.height - 120;
+                if (this.y > chaoY && !this.bounced) {
+                    this.y = chaoY;
                     this.vy = -8;
                     this.vx *= 0.7;
                     this.rotationSpeed *= 1.5;
@@ -1335,7 +1384,7 @@
         class Stickman {
             constructor(x, facing, character, playerNum) {
                 this.x = x;
-                this.y = 400;
+                this.y = canvas.height - 150;
                 this.vx = 0;
                 this.vy = 0;
                 this.facing = facing; // 1 = direita, -1 = esquerda
@@ -1512,8 +1561,9 @@
                 }
 
                 // TETO - Bounce no topo
-                if (this.y < 80) {
-                    this.y = 80;
+                const TETO = 80;
+                if (this.y < TETO) {
+                    this.y = TETO;
                     if (Math.abs(this.vy) > 3) {
                         this.vy = -this.vy * 0.5; // Bounce no teto
                         playSound('bounce');
@@ -1523,8 +1573,9 @@
                 }
 
                 // CHÃO - Bounce ou parar
-                if (this.y >= 450) {
-                    this.y = 450;
+                const CHAO = canvas.height - 100;
+                if (this.y >= CHAO) {
+                    this.y = CHAO;
                     if (Math.abs(this.vy) > 5) {
                         // Bounce no chão se velocidade alta
                         this.vy = -this.vy * 0.4;
@@ -2076,8 +2127,8 @@
             const char1 = characters[selectedP1] || characters.visao;
             const char2 = characters[selectedP2] || characters.bocaCorneta;
 
-            player1 = new Stickman(200, 1, char1, 1);
-            player2 = new Stickman(800, -1, char2, 2);
+            player1 = new Stickman(canvas.width * 0.2, 1, char1, 1);
+            player2 = new Stickman(canvas.width * 0.8, -1, char2, 2);
             gameState = 'playing';
             roundWinner = null;
 
@@ -2231,29 +2282,32 @@
             }
 
             // Chão semi-transparente
+            const chaoY = canvas.height - 100;
             ctx.fillStyle = 'rgba(30, 30, 50, 0.7)';
-            ctx.fillRect(0, 500, canvas.width, 100);
+            ctx.fillRect(0, chaoY, canvas.width, 100);
 
             // Linha do chão
             ctx.strokeStyle = 'rgba(100, 100, 150, 0.8)';
             ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.moveTo(0, 500);
-            ctx.lineTo(canvas.width, 500);
+            ctx.moveTo(0, chaoY);
+            ctx.lineTo(canvas.width, chaoY);
             ctx.stroke();
 
             // Luzes laterais (efeito de arena)
-            const glow1 = ctx.createRadialGradient(0, 400, 0, 0, 400, 200);
+            const glowY = canvas.height * 0.5;
+            const glowSize = canvas.height * 0.3;
+            const glow1 = ctx.createRadialGradient(0, glowY, 0, 0, glowY, glowSize);
             glow1.addColorStop(0, 'rgba(100,150,255,0.15)');
             glow1.addColorStop(1, 'transparent');
             ctx.fillStyle = glow1;
-            ctx.fillRect(0, 200, 200, 400);
+            ctx.fillRect(0, glowY - glowSize, glowSize, glowSize * 2);
 
-            const glow2 = ctx.createRadialGradient(canvas.width, 400, 0, canvas.width, 400, 200);
+            const glow2 = ctx.createRadialGradient(canvas.width, glowY, 0, canvas.width, glowY, glowSize);
             glow2.addColorStop(0, 'rgba(255,100,100,0.15)');
             glow2.addColorStop(1, 'transparent');
             ctx.fillStyle = glow2;
-            ctx.fillRect(canvas.width - 200, 200, 200, 400);
+            ctx.fillRect(canvas.width - glowSize, glowY - glowSize, glowSize, glowSize * 2);
         }
 
         // Desenhar texto de round
@@ -2261,13 +2315,13 @@
             if (gameState === 'roundEnd' && roundWinner) {
                 ctx.save();
                 ctx.fillStyle = roundWinner === 1 ? '#6496ff' : '#ff6464';
-                ctx.font = 'bold 60px Arial';
+                ctx.font = `bold ${Math.floor(canvas.height * 0.08)}px Arial`;
                 ctx.textAlign = 'center';
                 ctx.shadowColor = roundWinner === 1 ? '#6496ff' : '#ff6464';
                 ctx.shadowBlur = 20;
 
                 const name = roundWinner === 1 ? 'PLAYER 1' : 'PLAYER 2';
-                ctx.fillText(`${name} WINS!`, canvas.width / 2, 200);
+                ctx.fillText(`${name} WINS!`, canvas.width / 2, canvas.height * 0.3);
                 ctx.restore();
             }
         }
