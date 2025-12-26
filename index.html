@@ -2034,13 +2034,6 @@
                 }
                 ctx.restore();
 
-                // Borda da cabeça
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 4;
-                ctx.beginPath();
-                ctx.arc(headX, headY, this.headRadius, 0, Math.PI * 2);
-                ctx.stroke();
-
                 // Indicador de dash cooldown
                 if (this.dashCooldown > 0 && this.alive) {
                     // Cooldown máximo baseado na habilidade
