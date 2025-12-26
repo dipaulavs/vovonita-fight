@@ -2071,8 +2071,11 @@
         function checkCollisions() {
             if (gameState !== 'playing') return;
 
-            // Player 1 arma vs Player 2 cabeça
-            if (player2.alive && player1.alive && player2.invincible === 0) {
+            // Só personagens melee (espada) podem atacar de perto
+            const isMeleeWeapon = (weapon) => weapon === 'sword';
+
+            // Player 1 arma vs Player 2 cabeça (só se for melee)
+            if (player2.alive && player1.alive && player2.invincible === 0 && isMeleeWeapon(player1.character.weapon)) {
                 const sword1 = player1.getSwordHitbox();
                 if (lineCircleCollision(
                     sword1.x1, sword1.y1, sword1.x2, sword1.y2,
@@ -2081,16 +2084,12 @@
                     // Som de espada
                     playSound('sword');
                     player2.hit(player1.x, SWORD_DAMAGE);
-                    // Efeito de notas musicais se for corneta
-                    if (player1.character.weapon === 'corneta') {
-                        spawnMusicNotes(player2.headX, player2.headY, player1.facing);
-                    }
                     if (!player2.alive) endRound(1);
                 }
             }
 
-            // Player 2 arma vs Player 1 cabeça
-            if (player1.alive && player2.alive && player1.invincible === 0) {
+            // Player 2 arma vs Player 1 cabeça (só se for melee)
+            if (player1.alive && player2.alive && player1.invincible === 0 && isMeleeWeapon(player2.character.weapon)) {
                 const sword2 = player2.getSwordHitbox();
                 if (lineCircleCollision(
                     sword2.x1, sword2.y1, sword2.x2, sword2.y2,
@@ -2099,34 +2098,24 @@
                     // Som de espada
                     playSound('sword');
                     player1.hit(player2.x, SWORD_DAMAGE);
-                    // Efeito de notas musicais se for corneta
-                    if (player2.character.weapon === 'corneta') {
-                        spawnMusicNotes(player1.headX, player1.headY, player2.facing);
-                    }
                     if (!player1.alive) endRound(2);
                 }
             }
 
-            // Dash damage - Player 1 dash vs Player 2
-            if (player1.isDashing && player2.alive && player2.invincible === 0) {
+            // Dash damage - Player 1 dash vs Player 2 (só VISÃO tem dash)
+            if (player1.isDashing && player1.character.ability === 'dash' && player2.alive && player2.invincible === 0) {
                 const dist = Math.hypot(player1.x - player2.x, player1.y - player2.y);
                 if (dist < 70) {
                     player2.hit(player1.x, DASH_DAMAGE);
-                    if (player1.character.weapon === 'corneta') {
-                        spawnMusicNotes(player2.x, player2.y - 50, player1.facing);
-                    }
                     if (!player2.alive) endRound(1);
                 }
             }
 
-            // Dash damage - Player 2 dash vs Player 1
-            if (player2.isDashing && player1.alive && player1.invincible === 0) {
+            // Dash damage - Player 2 dash vs Player 1 (só VISÃO tem dash)
+            if (player2.isDashing && player2.character.ability === 'dash' && player1.alive && player1.invincible === 0) {
                 const dist = Math.hypot(player2.x - player1.x, player2.y - player1.y);
                 if (dist < 70) {
                     player1.hit(player2.x, DASH_DAMAGE);
-                    if (player2.character.weapon === 'corneta') {
-                        spawnMusicNotes(player1.x, player1.y - 50, player2.facing);
-                    }
                     if (!player1.alive) endRound(2);
                 }
             }
