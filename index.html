@@ -1422,9 +1422,9 @@
                         this.vx *= 0.8;
                     }
 
-                    // Pulo
+                    // Pulo (ajustado para gravidade baixa)
                     if (keys[moveKeys.up] && this.grounded) {
-                        this.vy = -15;
+                        this.vy = -10;
                         this.grounded = false;
                         // Som de pulo
                         playSound('jump');
@@ -1481,8 +1481,8 @@
                     this.isAttacking = false;
                 }
 
-                // Gravidade (estilo Supreme Duelist)
-                this.vy += 0.8;
+                // Gravidade estilo ESPAÇO (bem baixa, flutuante)
+                this.vy += 0.25;
 
                 // Aplicar velocidade
                 this.x += this.vx;
@@ -2037,11 +2037,11 @@
                 // Som de dano
                 playSound('hit');
 
-                // Knockback FORTE estilo Supreme Duelist - arremessa o personagem!
+                // Knockback FORTE - mais para TRÁS e pouco para cima
                 const knockbackDir = this.x > fromX ? 1 : -1;
-                const knockbackForce = 15 + (damage * 0.3); // Mais dano = mais knockback
-                this.vx = knockbackDir * knockbackForce;
-                this.vy = -18 - (damage * 0.2); // Voa para cima também
+                const knockbackForce = 20 + (damage * 0.4); // Mais dano = mais knockback
+                this.vx = knockbackDir * knockbackForce; // Força horizontal FORTE
+                this.vy = -5 - (damage * 0.1); // Pouco para cima
                 this.grounded = false;
 
                 // Efeito de partículas de dano
@@ -2054,9 +2054,9 @@
                 if (this.hp <= 0) {
                     this.hp = 0;
                     this.alive = false;
-                    // Knockback EXTREMO na morte - voa longe!
-                    this.vx = knockbackDir * 25;
-                    this.vy = -22;
+                    // Knockback EXTREMO na morte - voa para TRÁS!
+                    this.vx = knockbackDir * 30;
+                    this.vy = -8;
                     // Mais partículas na morte
                     spawnDamageParticles(this.x, this.y - 50, 100);
                     // Screen shake forte
