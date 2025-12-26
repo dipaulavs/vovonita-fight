@@ -1,0 +1,2049 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supreme Duelist - Stickman Battle</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        .game-wrapper {
+            text-align: center;
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 36px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(255,100,100,0.5);
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        #gameCanvas {
+            border-radius: 15px;
+            box-shadow: 0 0 50px rgba(255,50,50,0.3);
+        }
+
+        .controls-info {
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .controls-info span {
+            display: inline-block;
+            margin: 0 15px;
+            padding: 8px 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+        }
+
+        .controls-info .key {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+
+        .score-display {
+            display: flex;
+            justify-content: center;
+            gap: 100px;
+            margin-bottom: 15px;
+        }
+
+        .player-score {
+            color: #fff;
+            font-size: 24px;
+            padding: 10px 30px;
+            border-radius: 10px;
+        }
+
+        .p1-score {
+            background: rgba(100, 150, 255, 0.3);
+            border: 2px solid #6496ff;
+        }
+
+        .p2-score {
+            background: rgba(255, 100, 100, 0.3);
+            border: 2px solid #ff6464;
+        }
+
+        .character-name {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .wins {
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        /* Menu de Seleção de Personagens */
+        .menu-screen {
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 20px;
+            padding: 30px;
+            min-width: 1000px;
+        }
+
+        .menu-screen h2 {
+            color: #FFD700;
+            font-size: 28px;
+            margin-bottom: 25px;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .selection-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+        }
+
+        .player-select {
+            flex: 1;
+            padding: 20px;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .p1-select {
+            border: 2px solid #6496ff;
+        }
+
+        .p2-select {
+            border: 2px solid #ff6464;
+        }
+
+        .player-select h3 {
+            color: #fff;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .p1-select h3 { color: #6496ff; }
+        .p2-select h3 { color: #ff6464; }
+
+        .selected-preview {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            min-height: 120px;
+        }
+
+        .preview-image {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            background: #333;
+            background-size: cover;
+            background-position: center;
+            border: 3px solid #555;
+        }
+
+        .preview-name {
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .preview-weapon {
+            color: #aaa;
+            font-size: 14px;
+        }
+
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .char-option {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .char-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .char-option.selected {
+            border-color: #FFD700;
+            background: rgba(255, 215, 0, 0.2);
+        }
+
+        .char-option img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 5px;
+        }
+
+        .char-option .char-name {
+            color: #fff;
+            font-size: 11px;
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .char-option .char-weapon {
+            color: #888;
+            font-size: 9px;
+        }
+
+        .vs-divider {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .vs-divider span {
+            font-size: 48px;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+        }
+
+        .controls-hint {
+            color: #666;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .start-btn {
+            margin-top: 25px;
+            padding: 15px 60px;
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #444, #333);
+            color: #666;
+            border: none;
+            border-radius: 30px;
+            cursor: not-allowed;
+            transition: all 0.3s;
+        }
+
+        .start-btn:not(:disabled) {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #000;
+            cursor: pointer;
+            box-shadow: 0 5px 30px rgba(255, 215, 0, 0.4);
+        }
+
+        .start-btn:not(:disabled):hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 40px rgba(255, 215, 0, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-wrapper">
+        <h1>SUPREME DUELIST</h1>
+        <p class="subtitle">Stickman Battle Arena</p>
+
+        <!-- Menu de Seleção de Personagens -->
+        <div id="characterSelect" class="menu-screen">
+            <h2>SELECIONE OS LUTADORES</h2>
+
+            <div class="selection-container">
+                <!-- Player 1 -->
+                <div class="player-select p1-select">
+                    <h3>PLAYER 1</h3>
+                    <div class="selected-preview" id="p1Preview">
+                        <div class="preview-image" id="p1PreviewImg"></div>
+                        <div class="preview-name" id="p1PreviewName">-</div>
+                        <div class="preview-weapon" id="p1PreviewWeapon">-</div>
+                    </div>
+                    <div class="character-grid" id="p1Grid"></div>
+                    <p class="controls-hint">WASD + Q</p>
+                </div>
+
+                <!-- VS -->
+                <div class="vs-divider">
+                    <span>VS</span>
+                </div>
+
+                <!-- Player 2 -->
+                <div class="player-select p2-select">
+                    <h3>PLAYER 2</h3>
+                    <div class="selected-preview" id="p2Preview">
+                        <div class="preview-image" id="p2PreviewImg"></div>
+                        <div class="preview-name" id="p2PreviewName">-</div>
+                        <div class="preview-weapon" id="p2PreviewWeapon">-</div>
+                    </div>
+                    <div class="character-grid" id="p2Grid"></div>
+                    <p class="controls-hint">SETAS + L</p>
+                </div>
+            </div>
+
+            <button id="startBattle" class="start-btn" disabled>SELECIONE OS LUTADORES</button>
+        </div>
+
+        <!-- Tela do Jogo -->
+        <div id="gameScreen" style="display: none;">
+            <div class="score-display">
+                <div class="player-score p1-score">
+                    <div class="character-name" id="p1CharName">-</div>
+                    <div class="wins" id="p1wins">0</div>
+                </div>
+                <div class="player-score p2-score">
+                    <div class="character-name" id="p2CharName">-</div>
+                    <div class="wins" id="p2wins">0</div>
+                </div>
+            </div>
+
+            <canvas id="gameCanvas" width="1000" height="600"></canvas>
+
+            <div class="controls-info">
+                <span><span class="key">P1:</span> WASD mover | Q habilidade</span>
+                <span><span class="key">P2:</span> Setas mover | L habilidade</span>
+                <span><span class="key">R</span> Reiniciar | <span class="key">ESC</span> Menu</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Carregar imagens dos personagens
+        const visaoImg = new Image();
+        visaoImg.src = 'visao.png';
+
+        const bocaCornetaImg = new Image();
+        bocaCornetaImg.src = 'boca-de-corneta.png';
+
+        const belvederisImg = new Image();
+        belvederisImg.src = 'belvederis.png';
+
+        const larisgreenImg = new Image();
+        larisgreenImg.src = 'larisgreen.png';
+
+        const pinodebolicheImg = new Image();
+        pinodebolicheImg.src = 'pinodeboliche.png';
+
+        // Cenário de fundo
+        const cenarioImg = new Image();
+        cenarioImg.src = 'cenario.jpg';
+
+        // Estado do jogo
+        let gameState = 'playing'; // playing, roundEnd, waiting
+        let roundWinner = null;
+        let p1Wins = 0;
+        let p2Wins = 0;
+
+        // Sistema de partículas para notas musicais
+        const particles = [];
+
+        // Screen shake
+        let screenShake = 0;
+
+        // Partículas de dano
+        class DamageParticle {
+            constructor(x, y) {
+                this.x = x + (Math.random() - 0.5) * 30;
+                this.y = y + (Math.random() - 0.5) * 30;
+                this.vx = (Math.random() - 0.5) * 10;
+                this.vy = (Math.random() - 0.5) * 10 - 5;
+                this.life = 30 + Math.random() * 20;
+                this.maxLife = this.life;
+                this.size = 5 + Math.random() * 10;
+                this.color = ['#FF0000', '#FF4444', '#FF6666', '#FFAA00', '#FFFFFF'][Math.floor(Math.random() * 5)];
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.3;
+                this.vx *= 0.98;
+                this.life--;
+            }
+
+            draw() {
+                if (this.life <= 0) return;
+                const alpha = Math.max(0, this.life / this.maxLife);
+                const radius = Math.max(1, this.size * alpha);
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = this.color;
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function spawnDamageParticles(x, y, amount) {
+            const count = Math.min(Math.floor(amount / 5), 15);
+            for (let i = 0; i < count; i++) {
+                particles.push(new DamageParticle(x, y));
+            }
+        }
+
+        class MusicNote {
+            constructor(x, y, vx, vy) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx + (Math.random() - 0.5) * 3;
+                this.vy = vy + (Math.random() - 0.5) * 3;
+                this.life = 60;
+                this.maxLife = 60;
+                this.note = ['♪', '♫', '♬', '♩'][Math.floor(Math.random() * 4)];
+                this.size = 15 + Math.random() * 15;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.2;
+                this.color = ['#FFD700', '#FF69B4', '#00FFFF', '#FF6347', '#ADFF2F'][Math.floor(Math.random() * 5)];
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.1; // Gravidade leve
+                this.vx *= 0.98;
+                this.rotation += this.rotationSpeed;
+                this.life--;
+            }
+
+            draw() {
+                const alpha = this.life / this.maxLife;
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = this.color;
+                ctx.font = `bold ${this.size}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = 10;
+                ctx.fillText(this.note, 0, 0);
+                ctx.restore();
+            }
+        }
+
+        function spawnMusicNotes(x, y, direction) {
+            for (let i = 0; i < 5; i++) {
+                particles.push(new MusicNote(x, y, direction * 5, -3));
+            }
+        }
+
+        // Projéteis de notas musicais (tiros)
+        const projectiles = [];
+
+        class MusicProjectile {
+            constructor(x, y, direction, owner) {
+                this.x = x;
+                this.y = y;
+                this.vx = direction * 12;
+                this.direction = direction;
+                this.owner = owner; // 1 ou 2
+                this.life = 120;
+                this.note = ['♪', '♫', '♬'][Math.floor(Math.random() * 3)];
+                this.size = 30;
+                this.rotation = 0;
+                this.colors = ['#FFD700', '#FF69B4', '#00FFFF', '#FF6347'];
+                this.colorIndex = 0;
+                this.hitbox = 20;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.rotation += 0.15;
+                this.life--;
+
+                // Trocar cor para efeito piscante
+                if (this.life % 5 === 0) {
+                    this.colorIndex = (this.colorIndex + 1) % this.colors.length;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                ctx.fillStyle = this.colors[this.colorIndex];
+                ctx.font = `bold ${this.size}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.shadowColor = this.colors[this.colorIndex];
+                ctx.shadowBlur = 15;
+                ctx.fillText(this.note, 0, 0);
+                ctx.restore();
+            }
+        }
+
+        function shootMusicNote(player) {
+            const startX = player.x + player.facing * 60;
+            const startY = (player.headY || player.y - 70) + 30;
+            projectiles.push(new MusicProjectile(startX, startY, player.facing, player.playerNum));
+            // Efeito visual de disparo
+            spawnMusicNotes(startX, startY, player.facing);
+        }
+
+        // Machado Boomerang
+        class AxeBoomerang {
+            constructor(x, y, direction, owner, ownerRef) {
+                this.x = x;
+                this.y = y;
+                this.startX = x;
+                this.direction = direction;
+                this.owner = owner;
+                this.ownerRef = ownerRef;
+                this.vx = direction * 15;
+                this.vy = 0;
+                this.rotation = 0;
+                this.phase = 'going'; // going, returning
+                this.maxDistance = 350;
+                this.life = 300;
+                this.hitbox = 25;
+                this.hasHitOnThisThrow = false;
+            }
+
+            update() {
+                this.rotation += 0.4;
+                this.life--;
+
+                if (this.phase === 'going') {
+                    this.x += this.vx;
+                    // Verificar se atingiu distância máxima
+                    if (Math.abs(this.x - this.startX) > this.maxDistance) {
+                        this.phase = 'returning';
+                    }
+                } else {
+                    // Retornando para o dono
+                    const dx = this.ownerRef.x - this.x;
+                    const dy = (this.ownerRef.y - 30) - this.y;
+                    const dist = Math.hypot(dx, dy);
+
+                    if (dist > 10) {
+                        this.vx = (dx / dist) * 18;
+                        this.vy = (dy / dist) * 18;
+                        this.x += this.vx;
+                        this.y += this.vy;
+                    } else {
+                        // Chegou de volta - será removido no game loop
+                        this.life = 0;
+                        // axeOut será resetado no game loop quando o projétil for removido
+                    }
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+
+                // Sombra do machado
+                ctx.shadowColor = 'rgba(255, 100, 100, 0.8)';
+                ctx.shadowBlur = 20;
+
+                // Cabo do machado (madeira elegante)
+                const caboGrad = ctx.createLinearGradient(-4, -20, 4, -20);
+                caboGrad.addColorStop(0, '#5D3A1A');
+                caboGrad.addColorStop(0.3, '#8B5A2B');
+                caboGrad.addColorStop(0.5, '#A0522D');
+                caboGrad.addColorStop(0.7, '#8B5A2B');
+                caboGrad.addColorStop(1, '#5D3A1A');
+                ctx.fillStyle = caboGrad;
+                ctx.beginPath();
+                ctx.roundRect(-4, -18, 8, 36, 2);
+                ctx.fill();
+
+                // Detalhes do cabo (faixas de couro)
+                ctx.fillStyle = '#3D2314';
+                ctx.fillRect(-5, -5, 10, 4);
+                ctx.fillRect(-5, 5, 10, 4);
+                ctx.fillRect(-5, -15, 10, 3);
+
+                // Lâmina esquerda (gradiente metálico)
+                const bladeGrad1 = ctx.createLinearGradient(-40, -30, -10, 0);
+                bladeGrad1.addColorStop(0, '#E8E8E8');
+                bladeGrad1.addColorStop(0.2, '#C0C0C0');
+                bladeGrad1.addColorStop(0.5, '#A8A8A8');
+                bladeGrad1.addColorStop(0.8, '#808080');
+                bladeGrad1.addColorStop(1, '#606060');
+
+                ctx.fillStyle = bladeGrad1;
+                ctx.beginPath();
+                ctx.moveTo(-6, -18);
+                ctx.quadraticCurveTo(-20, -25, -35, -40);
+                ctx.quadraticCurveTo(-45, -30, -42, -15);
+                ctx.quadraticCurveTo(-35, 0, -6, 5);
+                ctx.closePath();
+                ctx.fill();
+
+                // Borda afiada esquerda
+                ctx.strokeStyle = '#FFFFFF';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(-35, -40);
+                ctx.quadraticCurveTo(-45, -30, -42, -15);
+                ctx.stroke();
+
+                // Lâmina direita (gradiente metálico)
+                const bladeGrad2 = ctx.createLinearGradient(10, -30, 40, 0);
+                bladeGrad2.addColorStop(0, '#606060');
+                bladeGrad2.addColorStop(0.2, '#808080');
+                bladeGrad2.addColorStop(0.5, '#A8A8A8');
+                bladeGrad2.addColorStop(0.8, '#C0C0C0');
+                bladeGrad2.addColorStop(1, '#E8E8E8');
+
+                ctx.fillStyle = bladeGrad2;
+                ctx.beginPath();
+                ctx.moveTo(6, -18);
+                ctx.quadraticCurveTo(20, -25, 35, -40);
+                ctx.quadraticCurveTo(45, -30, 42, -15);
+                ctx.quadraticCurveTo(35, 0, 6, 5);
+                ctx.closePath();
+                ctx.fill();
+
+                // Borda afiada direita
+                ctx.strokeStyle = '#FFFFFF';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(35, -40);
+                ctx.quadraticCurveTo(45, -30, 42, -15);
+                ctx.stroke();
+
+                // Centro metálico (encaixe)
+                const centerGrad = ctx.createRadialGradient(0, -8, 0, 0, -8, 15);
+                centerGrad.addColorStop(0, '#FFD700');
+                centerGrad.addColorStop(0.5, '#DAA520');
+                centerGrad.addColorStop(1, '#B8860B');
+                ctx.fillStyle = centerGrad;
+                ctx.beginPath();
+                ctx.arc(0, -8, 10, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Detalhe dourado no centro
+                ctx.fillStyle = '#FFF8DC';
+                ctx.beginPath();
+                ctx.arc(-3, -11, 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Runas brilhantes nas lâminas
+                ctx.strokeStyle = 'rgba(255, 215, 0, 0.8)';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(-25, -25);
+                ctx.lineTo(-20, -20);
+                ctx.lineTo(-25, -15);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(25, -25);
+                ctx.lineTo(20, -20);
+                ctx.lineTo(25, -15);
+                ctx.stroke();
+
+                ctx.restore();
+            }
+        }
+
+        function throwAxe(player) {
+            if (player.axeOut) return; // Só pode ter um machado por vez
+
+            const startX = player.x + player.facing * 50;
+            const startY = player.y - 30;
+            projectiles.push(new AxeBoomerang(startX, startY, player.facing, player.playerNum, player));
+            player.axeOut = true;
+        }
+
+        // Projétil de Capim
+        class GrassProjectile {
+            constructor(x, y, direction, owner) {
+                this.x = x;
+                this.y = y;
+                this.vx = direction * 10;
+                this.vy = -2 + Math.random() * -3;
+                this.direction = direction;
+                this.owner = owner;
+                this.life = 90;
+                this.rotation = Math.random() * Math.PI;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.3;
+                this.hitbox = 15;
+                this.blades = [];
+                // Criar múltiplas folhas de capim
+                for (let i = 0; i < 5; i++) {
+                    this.blades.push({
+                        offsetX: (Math.random() - 0.5) * 20,
+                        offsetY: (Math.random() - 0.5) * 15,
+                        length: 15 + Math.random() * 15,
+                        curve: (Math.random() - 0.5) * 0.5,
+                        green: Math.floor(150 + Math.random() * 105)
+                    });
+                }
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.15; // Gravidade leve
+                this.rotation += this.rotationSpeed;
+                this.life--;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+
+                // Desenhar cada folha de capim
+                for (const blade of this.blades) {
+                    ctx.strokeStyle = `rgb(${30 + Math.random() * 30}, ${blade.green}, ${20 + Math.random() * 30})`;
+                    ctx.lineWidth = 3;
+                    ctx.lineCap = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(blade.offsetX, blade.offsetY);
+                    ctx.quadraticCurveTo(
+                        blade.offsetX + blade.length * 0.5 + blade.curve * 20,
+                        blade.offsetY - blade.length * 0.5,
+                        blade.offsetX + blade.length * this.direction * 0.3,
+                        blade.offsetY - blade.length
+                    );
+                    ctx.stroke();
+                }
+
+                // Efeito de brilho verde
+                ctx.shadowColor = '#00FF00';
+                ctx.shadowBlur = 10;
+                ctx.fillStyle = 'rgba(100, 255, 100, 0.3)';
+                ctx.beginPath();
+                ctx.arc(0, 0, 12, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        function shootGrass(player) {
+            const startX = player.x + player.facing * 60;
+            const startY = player.y - 20;
+            // Atira 3 tufos de capim em spread
+            for (let i = -1; i <= 1; i++) {
+                const proj = new GrassProjectile(startX, startY + i * 15, player.facing, player.playerNum);
+                proj.vy += i * 1.5;
+                projectiles.push(proj);
+            }
+        }
+
+        // Projétil de Pino de Boliche
+        class BowlingPinProjectile {
+            constructor(x, y, direction, owner) {
+                this.x = x;
+                this.y = y;
+                this.vx = direction * 14;
+                this.vy = -4;
+                this.direction = direction;
+                this.owner = owner;
+                this.life = 120;
+                this.rotation = 0;
+                this.rotationSpeed = direction * 0.3;
+                this.hitbox = 20;
+                this.bounced = false;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.4; // Gravidade
+                this.rotation += this.rotationSpeed;
+                this.life--;
+
+                // Quicar no chão
+                if (this.y > 480 && !this.bounced) {
+                    this.y = 480;
+                    this.vy = -8;
+                    this.vx *= 0.7;
+                    this.rotationSpeed *= 1.5;
+                    this.bounced = true;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+
+                // Sombra
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                ctx.shadowBlur = 5;
+                ctx.shadowOffsetY = 3;
+
+                // Corpo do pino (branco com gradiente)
+                const bodyGrad = ctx.createLinearGradient(-12, -25, 12, -25);
+                bodyGrad.addColorStop(0, '#E8E8E8');
+                bodyGrad.addColorStop(0.3, '#FFFFFF');
+                bodyGrad.addColorStop(0.7, '#FFFFFF');
+                bodyGrad.addColorStop(1, '#D0D0D0');
+
+                ctx.fillStyle = bodyGrad;
+                ctx.beginPath();
+                // Base larga
+                ctx.moveTo(-10, 20);
+                ctx.quadraticCurveTo(-12, 10, -10, 0);
+                // Cintura fina
+                ctx.quadraticCurveTo(-6, -10, -8, -20);
+                // Pescoço fino
+                ctx.quadraticCurveTo(-5, -28, 0, -30);
+                // Lado direito (espelhado)
+                ctx.quadraticCurveTo(5, -28, 8, -20);
+                ctx.quadraticCurveTo(6, -10, 10, 0);
+                ctx.quadraticCurveTo(12, 10, 10, 20);
+                ctx.closePath();
+                ctx.fill();
+
+                // Contorno
+                ctx.strokeStyle = '#AAAAAA';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // Listras vermelhas
+                ctx.fillStyle = '#CC0000';
+                // Listra superior
+                ctx.beginPath();
+                ctx.ellipse(0, -22, 6, 3, 0, 0, Math.PI * 2);
+                ctx.fill();
+                // Listra inferior
+                ctx.beginPath();
+                ctx.ellipse(0, -15, 7, 3, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Brilho
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                ctx.beginPath();
+                ctx.ellipse(-4, -5, 3, 8, -0.3, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        function throwBowlingPin(player) {
+            const startX = player.x + player.facing * 50;
+            const startY = player.y - 30;
+            projectiles.push(new BowlingPinProjectile(startX, startY, player.facing, player.playerNum));
+        }
+
+        // Configuração dos personagens
+        const characters = {
+            visao: {
+                name: 'VISÃO',
+                image: visaoImg,
+                imageSrc: 'visao.png',
+                weapon: 'sword',
+                weaponName: 'Espada + Dash',
+                ability: 'dash',
+                dashDamage: true,
+                weaponColor: '#C0C0C0',
+                weaponGlow: '#ffffff',
+                damage: 35,
+                description: 'Dash atravessa e causa dano'
+            },
+            bocaCorneta: {
+                name: 'BOCA DE CORNETA',
+                image: bocaCornetaImg,
+                imageSrc: 'boca-de-corneta.png',
+                weapon: 'corneta',
+                weaponName: 'Corneta Musical',
+                ability: 'shoot',
+                dashDamage: false,
+                weaponColor: '#FFD700',
+                weaponGlow: '#FFA500',
+                damage: 20,
+                description: 'Atira notas musicais'
+            },
+            belvederis: {
+                name: 'BELVEDERIS',
+                image: belvederisImg,
+                imageSrc: 'belvederis.png',
+                weapon: 'axe',
+                weaponName: 'Machado Boomerang',
+                ability: 'boomerang',
+                dashDamage: false,
+                weaponColor: '#708090',
+                weaponGlow: '#C0C0C0',
+                damage: 30,
+                description: 'Machado vai e volta'
+            },
+            larisgreen: {
+                name: 'LARISGREEN',
+                image: larisgreenImg,
+                imageSrc: 'larisgreen.png',
+                weapon: 'hoe',
+                weaponName: 'Enxada de Capim',
+                ability: 'grass',
+                dashDamage: false,
+                weaponColor: '#8B4513',
+                weaponGlow: '#32CD32',
+                damage: '15x3',
+                description: 'Atira 3 tufos de capim'
+            },
+            pinodeboliche: {
+                name: 'PINODEBOLICHE',
+                image: pinodebolicheImg,
+                imageSrc: 'pinodeboliche.png',
+                weapon: 'bowlingpin',
+                weaponName: 'Pino de Boliche',
+                ability: 'throwpin',
+                dashDamage: false,
+                weaponColor: '#FFFFFF',
+                weaponGlow: '#CC0000',
+                damage: 35,
+                description: 'Pino que quica no chão'
+            }
+        };
+
+        // Sistema de seleção de personagens
+        let selectedP1 = null;
+        let selectedP2 = null;
+        let gameStarted = false;
+
+        // Elementos do menu
+        const characterSelect = document.getElementById('characterSelect');
+        const gameScreen = document.getElementById('gameScreen');
+        const startBtn = document.getElementById('startBattle');
+        const p1Grid = document.getElementById('p1Grid');
+        const p2Grid = document.getElementById('p2Grid');
+
+        // Criar cards de personagens
+        function createCharacterCards() {
+            Object.keys(characters).forEach(key => {
+                const char = characters[key];
+
+                // Card para P1
+                const card1 = document.createElement('div');
+                card1.className = 'char-option';
+                card1.dataset.char = key;
+                card1.innerHTML = `
+                    <img src="${char.imageSrc}" alt="${char.name}">
+                    <div class="char-name">${char.name}</div>
+                    <div class="char-weapon">${char.weaponName}</div>
+                `;
+                card1.onclick = () => selectCharacter(1, key);
+                p1Grid.appendChild(card1);
+
+                // Card para P2
+                const card2 = document.createElement('div');
+                card2.className = 'char-option';
+                card2.dataset.char = key;
+                card2.innerHTML = `
+                    <img src="${char.imageSrc}" alt="${char.name}">
+                    <div class="char-name">${char.name}</div>
+                    <div class="char-weapon">${char.weaponName}</div>
+                `;
+                card2.onclick = () => selectCharacter(2, key);
+                p2Grid.appendChild(card2);
+            });
+        }
+
+        // Selecionar personagem
+        function selectCharacter(player, charKey) {
+            const char = characters[charKey];
+            const grid = player === 1 ? p1Grid : p2Grid;
+            const previewImg = document.getElementById(`p${player}PreviewImg`);
+            const previewName = document.getElementById(`p${player}PreviewName`);
+            const previewWeapon = document.getElementById(`p${player}PreviewWeapon`);
+
+            // Remover seleção anterior
+            grid.querySelectorAll('.char-option').forEach(c => c.classList.remove('selected'));
+
+            // Adicionar seleção nova
+            grid.querySelector(`[data-char="${charKey}"]`).classList.add('selected');
+
+            // Atualizar preview
+            previewImg.style.backgroundImage = `url(${char.imageSrc})`;
+            previewName.textContent = char.name;
+            previewWeapon.textContent = `${char.weaponName} (${char.damage} dano)`;
+
+            // Salvar seleção
+            if (player === 1) {
+                selectedP1 = charKey;
+            } else {
+                selectedP2 = charKey;
+            }
+
+            // Verificar se pode iniciar
+            updateStartButton();
+        }
+
+        // Atualizar botão de iniciar
+        function updateStartButton() {
+            if (selectedP1 && selectedP2) {
+                startBtn.disabled = false;
+                startBtn.textContent = 'LUTAR!';
+            } else {
+                startBtn.disabled = true;
+                startBtn.textContent = 'SELECIONE OS LUTADORES';
+            }
+        }
+
+        // Iniciar batalha
+        function startBattle() {
+            if (!selectedP1 || !selectedP2) return;
+
+            characterSelect.style.display = 'none';
+            gameScreen.style.display = 'block';
+            gameStarted = true;
+
+            // Atualizar nomes na UI
+            document.getElementById('p1CharName').textContent = characters[selectedP1].name;
+            document.getElementById('p2CharName').textContent = characters[selectedP2].name;
+
+            // Resetar wins
+            p1Wins = 0;
+            p2Wins = 0;
+            document.getElementById('p1wins').textContent = '0';
+            document.getElementById('p2wins').textContent = '0';
+
+            initPlayers();
+        }
+
+        // Voltar ao menu
+        function backToMenu() {
+            gameScreen.style.display = 'none';
+            characterSelect.style.display = 'block';
+            gameStarted = false;
+        }
+
+        // Event listeners
+        startBtn.onclick = startBattle;
+
+        // Inicializar menu
+        createCharacterCards();
+
+        // Classe do Stickman com física ragdoll
+        class Stickman {
+            constructor(x, facing, character, playerNum) {
+                this.x = x;
+                this.y = 400;
+                this.vx = 0;
+                this.vy = 0;
+                this.facing = facing; // 1 = direita, -1 = esquerda
+                this.character = character;
+                this.playerNum = playerNum;
+
+                // Partes do corpo com física
+                this.headX = x;
+                this.headY = this.y - 70; // 400 - 70 = 330
+                this.bodyAngle = 0;
+                this.armAngle = facing === 1 ? -0.5 : 0.5;
+                this.legAngle1 = 0;
+                this.legAngle2 = 0;
+
+                // Estado
+                this.alive = true;
+                this.grounded = true;
+                this.isDashing = false;
+                this.dashCooldown = 0;
+                this.dashDirection = 0;
+                this.invincible = 0;
+
+                // Sistema de vida
+                this.maxHp = 100;
+                this.hp = 100;
+                this.hitFlash = 0;
+
+                // Machado boomerang
+                this.axeOut = false;
+
+                // Debounce para tecla de habilidade
+                this.lastDashKey = false;
+
+                // Dimensões
+                this.headRadius = 35;
+                this.bodyLength = 50;
+                this.armLength = 45;
+                this.legLength = 40;
+                this.swordLength = 80;
+            }
+
+            update(keys) {
+                if (!this.alive) {
+                    // Física de morte (ragdoll caindo)
+                    this.vy += 0.8;
+                    this.y += this.vy;
+                    this.x += this.vx;
+                    this.vx *= 0.98;
+                    this.bodyAngle += this.vx * 0.02;
+
+                    if (this.y > 700) {
+                        this.y = 700;
+                    }
+                    return;
+                }
+
+                // Cooldowns
+                if (this.dashCooldown > 0) this.dashCooldown--;
+                if (this.invincible > 0) this.invincible--;
+                if (this.hitFlash > 0) this.hitFlash--;
+
+                // Movimento
+                const speed = 5;
+                const moveKeys = this.playerNum === 1
+                    ? { left: 'KeyA', right: 'KeyD', up: 'KeyW', down: 'KeyS', dash: 'KeyQ' }
+                    : { left: 'ArrowLeft', right: 'ArrowRight', up: 'ArrowUp', down: 'ArrowDown', dash: 'KeyL' };
+
+                // Movimento (só se não estiver dando dash)
+                if (!this.isDashing) {
+                    if (keys[moveKeys.left]) {
+                        this.vx = -speed;
+                        this.facing = -1;
+                    } else if (keys[moveKeys.right]) {
+                        this.vx = speed;
+                        this.facing = 1;
+                    } else {
+                        this.vx *= 0.8;
+                    }
+
+                    // Pulo
+                    if (keys[moveKeys.up] && this.grounded) {
+                        this.vy = -15;
+                        this.grounded = false;
+                    }
+                }
+
+                // Habilidade especial (SEMPRE pode usar, não depende de isDashing)
+                const dashKeyPressed = !!keys[moveKeys.dash];
+
+                if (dashKeyPressed && this.dashCooldown === 0) {
+                    if (this.character.ability === 'shoot') {
+                        // TIRO DE NOTAS MUSICAIS
+                        shootMusicNote(this);
+                        this.dashCooldown = 25;
+                    } else if (this.character.ability === 'boomerang') {
+                        // MACHADO BOOMERANG
+                        if (!this.axeOut) {
+                            throwAxe(this);
+                            this.dashCooldown = 15;
+                        }
+                    } else if (this.character.ability === 'grass') {
+                        // TIRO DE CAPIM
+                        shootGrass(this);
+                        this.dashCooldown = 30;
+                    } else if (this.character.ability === 'throwpin') {
+                        // PINO DE BOLICHE
+                        throwBowlingPin(this);
+                        this.dashCooldown = 30;
+                    } else {
+                        // DASH
+                        this.isDashing = true;
+                        this.dashDirection = this.facing;
+                        this.vx = this.facing * 25;
+                        this.dashCooldown = 40;
+
+                        setTimeout(() => {
+                            this.isDashing = false;
+                        }, 150);
+                    }
+                }
+
+                // Gravidade
+                this.vy += 0.6;
+
+                // Aplicar velocidade
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Limites da tela
+                if (this.x < 50) this.x = 50;
+                if (this.x > canvas.width - 50) this.x = canvas.width - 50;
+
+                // Chão
+                if (this.y >= 450) {
+                    this.y = 450;
+                    this.vy = 0;
+                    this.grounded = true;
+                }
+
+                // Atualizar posição da cabeça
+                this.headX = this.x;
+                this.headY = this.y - 70;
+
+                // Animação das pernas ao andar
+                if (Math.abs(this.vx) > 0.5 && this.grounded) {
+                    this.legAngle1 = Math.sin(Date.now() * 0.015) * 0.5;
+                    this.legAngle2 = -this.legAngle1;
+                } else if (!this.grounded) {
+                    this.legAngle1 = -0.3;
+                    this.legAngle2 = 0.3;
+                } else {
+                    this.legAngle1 *= 0.9;
+                    this.legAngle2 *= 0.9;
+                }
+
+                // Animação do braço/espada
+                if (this.isDashing) {
+                    this.armAngle = this.facing * -1.2;
+                } else {
+                    const targetAngle = this.facing * -0.3;
+                    this.armAngle += (targetAngle - this.armAngle) * 0.1;
+                    // Pequena oscilação
+                    this.armAngle += Math.sin(Date.now() * 0.005) * 0.05;
+                }
+            }
+
+            draw() {
+                ctx.save();
+
+                // Efeito de hit flash (vermelho quando toma dano)
+                if (this.hitFlash > 0) {
+                    ctx.filter = 'brightness(2) saturate(0.5) sepia(1) hue-rotate(-50deg)';
+                }
+
+                // Efeito de invencibilidade
+                if (this.invincible > 0 && Math.floor(Date.now() / 100) % 2 === 0) {
+                    ctx.globalAlpha = 0.5;
+                }
+
+                // Efeito de dash
+                if (this.isDashing) {
+                    ctx.shadowColor = '#00ffff';
+                    ctx.shadowBlur = 30;
+
+                    // Trail effect
+                    ctx.globalAlpha = 0.3;
+                    for (let i = 1; i <= 3; i++) {
+                        this.drawBody(this.x - this.vx * i * 0.3, this.y, 0.3 / i);
+                    }
+                    ctx.globalAlpha = 1;
+                }
+
+                this.drawBody(this.x, this.y, 1);
+
+                ctx.restore();
+
+                // Desenhar barra de vida (fora do ctx.save/restore para não ter filtro)
+                this.drawHealthBar();
+            }
+
+            drawHealthBar() {
+                if (!this.alive) return; // Não mostra barra se morto
+
+                const barWidth = 80;
+                const barHeight = 10;
+                const barX = this.x - barWidth / 2;
+                const barY = this.headY - this.headRadius - 25;
+
+                // Nome do personagem
+                ctx.fillStyle = this.playerNum === 1 ? '#6496ff' : '#ff6464';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.shadowColor = 'rgba(0,0,0,0.8)';
+                ctx.shadowBlur = 4;
+                ctx.fillText(this.character.name, this.x, barY - 8);
+                ctx.shadowBlur = 0;
+
+                // Fundo da barra
+                ctx.fillStyle = 'rgba(0,0,0,0.7)';
+                ctx.fillRect(barX - 2, barY - 2, barWidth + 4, barHeight + 4);
+
+                // Barra de vida vazia
+                ctx.fillStyle = '#333';
+                ctx.fillRect(barX, barY, barWidth, barHeight);
+
+                // Barra de vida atual
+                const hpPercent = this.hp / this.maxHp;
+                let hpColor;
+                if (hpPercent > 0.6) {
+                    hpColor = '#4ade80'; // Verde
+                } else if (hpPercent > 0.3) {
+                    hpColor = '#fbbf24'; // Amarelo
+                } else {
+                    hpColor = '#ef4444'; // Vermelho
+                }
+
+                ctx.fillStyle = hpColor;
+                ctx.fillRect(barX, barY, barWidth * hpPercent, barHeight);
+
+                // Borda
+                ctx.strokeStyle = this.playerNum === 1 ? '#6496ff' : '#ff6464';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(barX - 1, barY - 1, barWidth + 2, barHeight + 2);
+
+                // Texto do HP
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 10px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`${this.hp}/${this.maxHp}`, this.x, barY + barHeight - 1);
+            }
+
+            drawBody(x, y, alpha = 1) {
+                ctx.save();
+                ctx.globalAlpha *= alpha;
+
+                const headX = x;
+                const headY = y - 70;
+                const bodyStartY = headY + this.headRadius - 5;
+                const bodyEndY = bodyStartY + this.bodyLength;
+
+                // Cor do jogador
+                const color = this.playerNum === 1 ? '#6496ff' : '#ff6464';
+                const darkColor = this.playerNum === 1 ? '#4070cc' : '#cc4040';
+
+                // Pernas
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 8;
+                ctx.lineCap = 'round';
+
+                // Perna esquerda
+                ctx.save();
+                ctx.translate(x - 8, bodyEndY);
+                ctx.rotate(this.legAngle1);
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, this.legLength);
+                ctx.stroke();
+                ctx.restore();
+
+                // Perna direita
+                ctx.save();
+                ctx.translate(x + 8, bodyEndY);
+                ctx.rotate(this.legAngle2);
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, this.legLength);
+                ctx.stroke();
+                ctx.restore();
+
+                // Corpo
+                ctx.beginPath();
+                ctx.moveTo(x, bodyStartY);
+                ctx.lineTo(x, bodyEndY);
+                ctx.stroke();
+
+                // Braço traseiro (sem espada)
+                ctx.save();
+                ctx.translate(x, bodyStartY + 10);
+                ctx.rotate(-this.armAngle * 0.5);
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(-this.facing * 30, 25);
+                ctx.stroke();
+                ctx.restore();
+
+                // Braço com espada
+                ctx.save();
+                ctx.translate(x, bodyStartY + 10);
+                ctx.rotate(this.armAngle);
+
+                // Braço
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(this.facing * this.armLength, 0);
+                ctx.stroke();
+
+                // Arma
+                const weaponStartX = this.facing * this.armLength;
+
+                if (this.character.weapon === 'corneta') {
+                    // CORNETA
+                    // Corpo da corneta (cone)
+                    ctx.fillStyle = this.character.weaponColor;
+                    ctx.beginPath();
+                    ctx.moveTo(weaponStartX, -5);
+                    ctx.lineTo(weaponStartX + this.facing * 50, -15);
+                    ctx.lineTo(weaponStartX + this.facing * 50, 15);
+                    ctx.lineTo(weaponStartX, 5);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.strokeStyle = '#B8860B';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    // Boca da corneta (abertura)
+                    ctx.fillStyle = '#8B4513';
+                    ctx.beginPath();
+                    ctx.ellipse(weaponStartX + this.facing * 50, 0, 8, 18, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = this.character.weaponGlow;
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+
+                    // Bocal
+                    ctx.fillStyle = '#C0C0C0';
+                    ctx.beginPath();
+                    ctx.arc(weaponStartX, 0, 6, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Brilho
+                    ctx.strokeStyle = this.isDashing ? '#00ffff' : this.character.weaponGlow;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(weaponStartX + this.facing * 10, -3);
+                    ctx.lineTo(weaponStartX + this.facing * 40, -10);
+                    ctx.stroke();
+                } else if (this.character.weapon === 'bowlingpin') {
+                    // PINO DE BOLICHE na mão
+                    ctx.save();
+                    ctx.translate(weaponStartX + this.facing * 20, 5);
+                    ctx.rotate(this.facing === 1 ? 0.5 : -0.5);
+
+                    // Corpo do pino (branco com gradiente)
+                    const pinGrad = ctx.createLinearGradient(-8, -20, 8, -20);
+                    pinGrad.addColorStop(0, '#E0E0E0');
+                    pinGrad.addColorStop(0.5, '#FFFFFF');
+                    pinGrad.addColorStop(1, '#D0D0D0');
+
+                    ctx.fillStyle = pinGrad;
+                    ctx.beginPath();
+                    ctx.moveTo(-7, 15);
+                    ctx.quadraticCurveTo(-8, 5, -7, 0);
+                    ctx.quadraticCurveTo(-4, -8, -5, -15);
+                    ctx.quadraticCurveTo(-3, -20, 0, -22);
+                    ctx.quadraticCurveTo(3, -20, 5, -15);
+                    ctx.quadraticCurveTo(4, -8, 7, 0);
+                    ctx.quadraticCurveTo(8, 5, 7, 15);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Contorno
+                    ctx.strokeStyle = '#AAAAAA';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+
+                    // Listras vermelhas
+                    ctx.fillStyle = '#CC0000';
+                    ctx.beginPath();
+                    ctx.ellipse(0, -16, 4, 2, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.ellipse(0, -11, 5, 2, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Brilho
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                    ctx.beginPath();
+                    ctx.ellipse(-2, -3, 2, 5, -0.2, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.restore();
+                } else if (this.character.weapon === 'hoe') {
+                    // ENXADA (estilo clássico)
+                    ctx.save();
+                    ctx.translate(weaponStartX, 0);
+
+                    // Cabo longo de madeira (diagonal)
+                    ctx.save();
+                    ctx.rotate(this.facing === 1 ? -0.6 : 0.6);
+
+                    // Contorno preto do cabo
+                    ctx.strokeStyle = '#2D2D2D';
+                    ctx.lineWidth = 10;
+                    ctx.lineCap = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(this.facing * 55, -35);
+                    ctx.stroke();
+
+                    // Cabo de madeira
+                    const caboGrad = ctx.createLinearGradient(0, 0, this.facing * 55, -35);
+                    caboGrad.addColorStop(0, '#A67C52');
+                    caboGrad.addColorStop(0.3, '#C4956A');
+                    caboGrad.addColorStop(0.6, '#B8896B');
+                    caboGrad.addColorStop(1, '#8B6914');
+                    ctx.strokeStyle = caboGrad;
+                    ctx.lineWidth = 7;
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(this.facing * 55, -35);
+                    ctx.stroke();
+
+                    ctx.restore();
+
+                    // Encaixe circular (onde o cabo entra)
+                    ctx.fillStyle = '#5A5A5A';
+                    ctx.strokeStyle = '#2D2D2D';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.ellipse(this.facing * 3, 8, 8, 10, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    // Furo do encaixe
+                    ctx.fillStyle = '#8B6914';
+                    ctx.beginPath();
+                    ctx.ellipse(this.facing * 3, 6, 4, 5, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#3D3D3D';
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+
+                    // Lâmina da enxada (trapézio para baixo)
+                    const bladeGrad = ctx.createLinearGradient(-15, 10, 15, 45);
+                    bladeGrad.addColorStop(0, '#8A8A8A');
+                    bladeGrad.addColorStop(0.4, '#6A6A6A');
+                    bladeGrad.addColorStop(0.7, '#5A5A5A');
+                    bladeGrad.addColorStop(1, '#4A4A4A');
+
+                    ctx.fillStyle = bladeGrad;
+                    ctx.strokeStyle = '#2D2D2D';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(this.facing * -10, 15);  // Topo esquerdo
+                    ctx.lineTo(this.facing * 16, 15);   // Topo direito
+                    ctx.lineTo(this.facing * 12, 50);   // Baixo direito
+                    ctx.lineTo(this.facing * -3, 50);   // Ponta afiada
+                    ctx.lineTo(this.facing * -14, 35);  // Baixo esquerdo
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+
+                    // Brilho na lâmina
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                    ctx.beginPath();
+                    ctx.moveTo(this.facing * -5, 42);
+                    ctx.lineTo(this.facing * 8, 48);
+                    ctx.lineTo(this.facing * 10, 42);
+                    ctx.lineTo(this.facing * -2, 38);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    ctx.restore();
+                } else if (this.character.weapon === 'axe') {
+                    // MACHADO (só mostra se não foi lançado)
+                    if (!this.axeOut) {
+                        ctx.save();
+                        ctx.translate(weaponStartX + this.facing * 30, 0);
+                        ctx.rotate(this.facing === 1 ? 0.3 : -0.3);
+
+                        // Cabo elegante
+                        const caboGrad = ctx.createLinearGradient(-3, -15, 3, -15);
+                        caboGrad.addColorStop(0, '#5D3A1A');
+                        caboGrad.addColorStop(0.5, '#A0522D');
+                        caboGrad.addColorStop(1, '#5D3A1A');
+                        ctx.fillStyle = caboGrad;
+                        ctx.fillRect(-3, -12, 6, 24);
+
+                        // Faixas de couro
+                        ctx.fillStyle = '#3D2314';
+                        ctx.fillRect(-4, -2, 8, 3);
+                        ctx.fillRect(-4, 5, 8, 3);
+
+                        // Lâmina principal (gradiente metálico)
+                        const bladeGrad = ctx.createLinearGradient(0, -25, 25 * this.facing, -10);
+                        bladeGrad.addColorStop(0, '#E8E8E8');
+                        bladeGrad.addColorStop(0.5, '#A8A8A8');
+                        bladeGrad.addColorStop(1, '#707070');
+
+                        ctx.fillStyle = bladeGrad;
+                        ctx.beginPath();
+                        ctx.moveTo(-4, -12);
+                        ctx.quadraticCurveTo(this.facing * 15, -20, this.facing * 25, -30);
+                        ctx.quadraticCurveTo(this.facing * 32, -20, this.facing * 28, -5);
+                        ctx.quadraticCurveTo(this.facing * 20, 5, -4, 0);
+                        ctx.closePath();
+                        ctx.fill();
+
+                        // Borda afiada
+                        ctx.strokeStyle = '#FFFFFF';
+                        ctx.lineWidth = 1.5;
+                        ctx.beginPath();
+                        ctx.moveTo(this.facing * 25, -30);
+                        ctx.quadraticCurveTo(this.facing * 32, -20, this.facing * 28, -5);
+                        ctx.stroke();
+
+                        // Centro dourado
+                        const centerGrad = ctx.createRadialGradient(0, -6, 0, 0, -6, 8);
+                        centerGrad.addColorStop(0, '#FFD700');
+                        centerGrad.addColorStop(1, '#B8860B');
+                        ctx.fillStyle = centerGrad;
+                        ctx.beginPath();
+                        ctx.arc(0, -6, 6, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        ctx.restore();
+                    }
+                } else {
+                    // ESPADA (padrão)
+                    ctx.strokeStyle = this.character.weaponColor;
+                    ctx.lineWidth = 6;
+                    ctx.beginPath();
+                    ctx.moveTo(weaponStartX, 0);
+                    ctx.lineTo(weaponStartX + this.facing * this.swordLength, 0);
+                    ctx.stroke();
+
+                    // Lâmina brilhante
+                    ctx.strokeStyle = this.isDashing ? '#00ffff' : this.character.weaponGlow;
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(weaponStartX + 5 * this.facing, 0);
+                    ctx.lineTo(weaponStartX + this.facing * (this.swordLength - 5), 0);
+                    ctx.stroke();
+
+                    // Guarda da espada
+                    ctx.fillStyle = '#ffd700';
+                    ctx.fillRect(weaponStartX - 5, -8, 10, 16);
+                }
+
+                ctx.restore();
+
+                // Cabeça com foto
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(headX, headY, this.headRadius, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.clip();
+
+                if (this.character.image.complete) {
+                    ctx.drawImage(
+                        this.character.image,
+                        headX - this.headRadius,
+                        headY - this.headRadius,
+                        this.headRadius * 2,
+                        this.headRadius * 2
+                    );
+                } else {
+                    ctx.fillStyle = color;
+                    ctx.fill();
+                }
+                ctx.restore();
+
+                // Borda da cabeça
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.arc(headX, headY, this.headRadius, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Indicador de dash cooldown
+                if (this.dashCooldown > 0 && this.alive) {
+                    const cooldownPercent = this.dashCooldown / 60;
+                    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                    ctx.fillRect(x - 25, y + 60, 50, 8);
+                    ctx.fillStyle = '#00ffff';
+                    ctx.fillRect(x - 25, y + 60, 50 * (1 - cooldownPercent), 8);
+                }
+
+                ctx.restore();
+            }
+
+            getSwordTip() {
+                const bodyStartY = this.headY + this.headRadius - 5;
+                const armX = this.x + Math.cos(this.armAngle) * this.armLength * this.facing;
+                const armY = bodyStartY + 10 + Math.sin(this.armAngle) * this.armLength;
+
+                const tipX = armX + Math.cos(this.armAngle) * this.swordLength * this.facing;
+                const tipY = armY + Math.sin(this.armAngle) * this.swordLength;
+
+                return { x: tipX, y: tipY, startX: armX, startY: armY };
+            }
+
+            getSwordHitbox() {
+                const sword = this.getSwordTip();
+                return {
+                    x1: sword.startX,
+                    y1: sword.startY,
+                    x2: sword.x,
+                    y2: sword.y
+                };
+            }
+
+            hit(fromX, damage) {
+                this.hp -= damage;
+                this.hitFlash = 20;
+                this.invincible = 45; // Invencibilidade temporária mais longa
+
+                // Knockback forte
+                const knockbackDir = this.x > fromX ? 1 : -1;
+                this.vx = knockbackDir * 12;
+                this.vy = -10;
+                this.grounded = false;
+
+                // Efeito de partículas de dano
+                spawnDamageParticles(this.x, this.y - 50, damage);
+
+                // Screen shake
+                screenShake = 8;
+
+                // Morreu?
+                if (this.hp <= 0) {
+                    this.hp = 0;
+                    this.alive = false;
+                    this.vx = knockbackDir * 18;
+                    this.vy = -15;
+                    // Mais partículas na morte
+                    spawnDamageParticles(this.x, this.y - 50, 100);
+                }
+            }
+        }
+
+        // Jogadores
+        let player1 = null;
+        let player2 = null;
+
+        function initPlayers() {
+            // Usar personagens selecionados no menu
+            const char1 = characters[selectedP1] || characters.visao;
+            const char2 = characters[selectedP2] || characters.bocaCorneta;
+
+            player1 = new Stickman(200, 1, char1, 1);
+            player2 = new Stickman(800, -1, char2, 2);
+            gameState = 'playing';
+            roundWinner = null;
+
+            // Limpar projéteis
+            projectiles.length = 0;
+            particles.length = 0;
+
+            // Atualizar nomes na UI
+            document.getElementById('p1CharName').textContent = char1.name;
+            document.getElementById('p2CharName').textContent = char2.name;
+        }
+
+        // Input
+        const keys = {};
+        document.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+
+            if (e.code === 'KeyR' && gameStarted) {
+                initPlayers();
+            }
+
+            if (e.code === 'Escape' && gameStarted) {
+                backToMenu();
+            }
+        });
+        document.addEventListener('keyup', (e) => {
+            keys[e.code] = false;
+        });
+
+        // Verificar colisão linha-círculo
+        function lineCircleCollision(x1, y1, x2, y2, cx, cy, r) {
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const fx = x1 - cx;
+            const fy = y1 - cy;
+
+            const a = dx * dx + dy * dy;
+            const b = 2 * (fx * dx + fy * dy);
+            const c = fx * fx + fy * fy - r * r;
+
+            let discriminant = b * b - 4 * a * c;
+
+            if (discriminant < 0) return false;
+
+            discriminant = Math.sqrt(discriminant);
+            const t1 = (-b - discriminant) / (2 * a);
+            const t2 = (-b + discriminant) / (2 * a);
+
+            return (t1 >= 0 && t1 <= 1) || (t2 >= 0 && t2 <= 1);
+        }
+
+        // Dano das armas
+        const SWORD_DAMAGE = 25;
+        const DASH_DAMAGE = 35;
+
+        // Verificar colisão entre jogadores
+        function checkCollisions() {
+            if (gameState !== 'playing') return;
+
+            // Player 1 arma vs Player 2 cabeça
+            if (player2.alive && player1.alive && player2.invincible === 0) {
+                const sword1 = player1.getSwordHitbox();
+                if (lineCircleCollision(
+                    sword1.x1, sword1.y1, sword1.x2, sword1.y2,
+                    player2.headX, player2.headY, player2.headRadius
+                )) {
+                    player2.hit(player1.x, SWORD_DAMAGE);
+                    // Efeito de notas musicais se for corneta
+                    if (player1.character.weapon === 'corneta') {
+                        spawnMusicNotes(player2.headX, player2.headY, player1.facing);
+                    }
+                    if (!player2.alive) endRound(1);
+                }
+            }
+
+            // Player 2 arma vs Player 1 cabeça
+            if (player1.alive && player2.alive && player1.invincible === 0) {
+                const sword2 = player2.getSwordHitbox();
+                if (lineCircleCollision(
+                    sword2.x1, sword2.y1, sword2.x2, sword2.y2,
+                    player1.headX, player1.headY, player1.headRadius
+                )) {
+                    player1.hit(player2.x, SWORD_DAMAGE);
+                    // Efeito de notas musicais se for corneta
+                    if (player2.character.weapon === 'corneta') {
+                        spawnMusicNotes(player1.headX, player1.headY, player2.facing);
+                    }
+                    if (!player1.alive) endRound(2);
+                }
+            }
+
+            // Dash damage - Player 1 dash vs Player 2
+            if (player1.isDashing && player2.alive && player2.invincible === 0) {
+                const dist = Math.hypot(player1.x - player2.x, player1.y - player2.y);
+                if (dist < 70) {
+                    player2.hit(player1.x, DASH_DAMAGE);
+                    if (player1.character.weapon === 'corneta') {
+                        spawnMusicNotes(player2.x, player2.y - 50, player1.facing);
+                    }
+                    if (!player2.alive) endRound(1);
+                }
+            }
+
+            // Dash damage - Player 2 dash vs Player 1
+            if (player2.isDashing && player1.alive && player1.invincible === 0) {
+                const dist = Math.hypot(player2.x - player1.x, player2.y - player1.y);
+                if (dist < 70) {
+                    player1.hit(player2.x, DASH_DAMAGE);
+                    if (player2.character.weapon === 'corneta') {
+                        spawnMusicNotes(player1.x, player1.y - 50, player2.facing);
+                    }
+                    if (!player1.alive) endRound(2);
+                }
+            }
+        }
+
+        function endRound(winner) {
+            gameState = 'roundEnd';
+            roundWinner = winner;
+
+            if (winner === 1) {
+                p1Wins++;
+                document.getElementById('p1wins').textContent = p1Wins;
+            } else {
+                p2Wins++;
+                document.getElementById('p2wins').textContent = p2Wins;
+            }
+
+            // Reiniciar após delay
+            setTimeout(() => {
+                initPlayers();
+            }, 1500);
+        }
+
+        // Desenhar arena
+        function drawArena() {
+            // Desenhar imagem de cenário como fundo
+            if (cenarioImg.complete && cenarioImg.naturalWidth > 0) {
+                // Desenhar imagem cobrindo todo o canvas
+                ctx.drawImage(cenarioImg, 0, 0, canvas.width, canvas.height);
+
+                // Overlay escuro semi-transparente para melhor visibilidade
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else {
+                // Fallback se imagem não carregar
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, '#1a1a2e');
+                gradient.addColorStop(1, '#16213e');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            // Chão semi-transparente
+            ctx.fillStyle = 'rgba(30, 30, 50, 0.7)';
+            ctx.fillRect(0, 500, canvas.width, 100);
+
+            // Linha do chão
+            ctx.strokeStyle = 'rgba(100, 100, 150, 0.8)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, 500);
+            ctx.lineTo(canvas.width, 500);
+            ctx.stroke();
+
+            // Luzes laterais (efeito de arena)
+            const glow1 = ctx.createRadialGradient(0, 400, 0, 0, 400, 200);
+            glow1.addColorStop(0, 'rgba(100,150,255,0.15)');
+            glow1.addColorStop(1, 'transparent');
+            ctx.fillStyle = glow1;
+            ctx.fillRect(0, 200, 200, 400);
+
+            const glow2 = ctx.createRadialGradient(canvas.width, 400, 0, canvas.width, 400, 200);
+            glow2.addColorStop(0, 'rgba(255,100,100,0.15)');
+            glow2.addColorStop(1, 'transparent');
+            ctx.fillStyle = glow2;
+            ctx.fillRect(canvas.width - 200, 200, 200, 400);
+        }
+
+        // Desenhar texto de round
+        function drawRoundText() {
+            if (gameState === 'roundEnd' && roundWinner) {
+                ctx.save();
+                ctx.fillStyle = roundWinner === 1 ? '#6496ff' : '#ff6464';
+                ctx.font = 'bold 60px Arial';
+                ctx.textAlign = 'center';
+                ctx.shadowColor = roundWinner === 1 ? '#6496ff' : '#ff6464';
+                ctx.shadowBlur = 20;
+
+                const name = roundWinner === 1 ? 'PLAYER 1' : 'PLAYER 2';
+                ctx.fillText(`${name} WINS!`, canvas.width / 2, 200);
+                ctx.restore();
+            }
+        }
+
+        // Loop principal
+        function gameLoop() {
+            // Só executar se o jogo iniciou e jogadores existem
+            if (!gameStarted || !player1 || !player2) {
+                requestAnimationFrame(gameLoop);
+                return;
+            }
+
+            try {
+            // Limpar
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Screen shake
+            ctx.save();
+            if (screenShake > 0) {
+                const shakeX = (Math.random() - 0.5) * screenShake * 2;
+                const shakeY = (Math.random() - 0.5) * screenShake * 2;
+                ctx.translate(shakeX, shakeY);
+                screenShake *= 0.85;
+                if (screenShake < 0.5) screenShake = 0;
+            }
+
+            // Desenhar
+            drawArena();
+
+            // Update e draw jogadores
+            player1.update(keys);
+            player2.update(keys);
+
+            checkCollisions();
+
+            player1.draw();
+            player2.draw();
+
+            // Update e draw partículas (notas musicais decorativas e dano)
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const particle = particles[i];
+                if (!particle) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+                particle.update();
+                particle.draw();
+                if (particle.life <= 0) {
+                    particles.splice(i, 1);
+                }
+            }
+
+            // Update e draw projéteis (tiros de notas e machados)
+            for (let i = projectiles.length - 1; i >= 0; i--) {
+                const proj = projectiles[i];
+                if (!proj) {
+                    projectiles.splice(i, 1);
+                    continue;
+                }
+
+                try {
+                    proj.update();
+                    proj.draw();
+                } catch (e) {
+                    projectiles.splice(i, 1);
+                    continue;
+                }
+
+                // Verificar colisão com jogadores
+                const target = proj.owner === 1 ? player2 : player1;
+
+                // Machado boomerang pode acertar na ida E na volta
+                const canHit = proj instanceof AxeBoomerang
+                    ? (target.alive && target.invincible === 0)
+                    : (target.alive && target.invincible === 0);
+
+                if (canHit) {
+                    const dist = Math.hypot(proj.x - target.headX, proj.y - target.headY);
+                    if (dist < target.headRadius + proj.hitbox) {
+                        // Acertou!
+                        if (proj instanceof AxeBoomerang) {
+                            target.hit(proj.x, 30); // 30 de dano por machado
+                            // Machado continua depois de acertar (pode acertar de novo na volta)
+                            proj.phase = 'returning'; // Força voltar após acertar
+                        } else if (proj instanceof GrassProjectile) {
+                            target.hit(proj.x, 15); // 15 de dano por capim (mas são 3 tufos!)
+                            projectiles.splice(i, 1);
+                        } else if (proj instanceof BowlingPinProjectile) {
+                            target.hit(proj.x, 35); // 35 de dano por pino
+                            projectiles.splice(i, 1);
+                        } else {
+                            target.hit(proj.x, 20); // 20 de dano por nota
+                            spawnMusicNotes(target.headX, target.headY, proj.direction);
+                            projectiles.splice(i, 1);
+                        }
+
+                        if (!target.alive) {
+                            endRound(proj.owner);
+                        }
+                        continue;
+                    }
+                }
+
+                // Remover se vida acabou ou saiu da tela (notas musicais)
+                if (proj.life <= 0) {
+                    if (proj instanceof AxeBoomerang) {
+                        proj.ownerRef.axeOut = false;
+                    }
+                    projectiles.splice(i, 1);
+                } else if (!(proj instanceof AxeBoomerang) && (proj.x < -50 || proj.x > canvas.width + 50)) {
+                    projectiles.splice(i, 1);
+                }
+            }
+
+            drawRoundText();
+
+            // Restaurar após screen shake
+            ctx.restore();
+
+            } catch (e) {
+                console.error('Game loop error:', e);
+                ctx.restore();
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Iniciar quando imagem carregar
+        visaoImg.onload = () => {
+            gameLoop();
+        };
+
+        // Fallback se imagem não carregar
+        setTimeout(() => {
+            if (!visaoImg.complete) {
+                gameLoop();
+            }
+        }, 1000);
+
+        // Iniciar de qualquer forma
+        gameLoop();
+    </script>
+</body>
+</html>
